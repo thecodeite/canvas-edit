@@ -1,0 +1,62 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+}
+
+hr {
+  xborder-top: 1px solid black;
+}
+
+.App {
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.Editor {
+  background: #e0e0e0;
+}
+
+.editors {
+  display: flex;
+}
+
+.Editor textarea {
+  width: calc(100% - 4px - 4px);
+  height: 200px;
+  margin: 4px;
+  padding: 4px;
+}
+
+.Preview {
+  background: white;
+  height: calc(100% - 200px - 12px);
+}
+
+button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.cells {
+  display: grid;
+  height: 100%;
+  background-color: #e2e2e2;
+}
+
+.cell {
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  margin: 4px;
+  background-color: #fff;
+  background-size: 21px 21px;
+  background-image:
+    -webkit-linear-gradient(45deg,#efefef 25%,transparent 25%,transparent 75%,#efefef 75%,#efefef),
+    -webkit-linear-gradient(45deg,#efefef 25%,transparent 25%,transparent 75%,#efefef 75%,#efefef);
+  background-position: 0 0,10px 10px;
+}
