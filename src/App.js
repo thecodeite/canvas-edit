@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
+import cheerio from 'cheerio';
 import './App.css';
 
 const defaultScript = `
-ctx.fillStyle = 'rgb(200, 0, 0)';
-ctx.fillRect(10, 10, 50, 50);
+<html>
 
-ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-ctx.fillRect(30, 30, 50, 50);
+</html>
 `
 
-const defaultData = '{}'
+const defaultSelector = ''
 
 class App extends Component {
   constructor () {
@@ -19,22 +18,22 @@ class App extends Component {
 
   load () {
     const name = window.location.hash.substr(1) || 'default'
-    const fromLocalStorage = window.localStorage.getItem('canvas-editor-' + name)
+    const fromLocalStorage = window.localStorage.getItem('cheerio-editor-' + name)
 
     if (fromLocalStorage === null) {
-      window.localStorage.setItem('canvas-editor-' + name, this.state ? this.state.text : defaultScript)
+      window.localStorage.setItem('cheerio-editor-' + name, this.state ? this.state.text : defaultScript)
     }
 
-    const dataFromLocalStorage = window.localStorage.getItem('canvas-editor-' + name + '-data')
+    const selectorFromLocalStorage = window.localStorage.getItem('cheerio-editor-' + name + '-selector')
 
     const names = [...window.localStorage]
       .map((_, i) => localStorage.key(i))
-      .filter(n => n.startsWith('canvas-editor-') && !n.endsWith('-data'))
-      .map(n => n.substr('canvas-editor-'.length))
+      .filter(n => n.startsWith('cheerio-editor-') && !n.endsWith('-data'))
+      .map(n => n.substr('cheerio-editor-'.length))
 
     return {
       text: fromLocalStorage || defaultScript,
-      data: dataFromLocalStorage || defaultData,
+      selector: selectorFromLocalStorage || defaultSelector,
       name,
       names
     }
@@ -49,24 +48,12 @@ class App extends Component {
   }
 
   delete (name) {
-    window.localStorage.removeItem('canvas-editor-' + name)
+    window.localStorage.removeItem('cheerio-editor-' + name)
     this.setState(this.load())
   }
 
   componentDidUpdate() {
     this.drawCanvas()
-  }
-
-  getData() {
-    try {
-      return JSON.parse(this.state.data)
-    } catch (e) {
-      try {
-        return (new Function('return ' + this.state.data.trim()))()
-      } catch (e) {
-        return {}
-      }
-    }
   }
 
   drawCanvas () {
@@ -94,28 +81,43 @@ class App extends Component {
   }
 
   render() {
-    const {text, data, name, names} = this.state
+    const {text, selector, name, names} = this.state
     const onChange = e => {
-      window.localStorage.setItem('canvas-editor-' + name, e.target.value)
+      window.localStorage.setItem('cheerio-editor-' + name, e.target.value)
       this.setState(this.load())
     }
-    const onChangeData = e => {
-      window.localStorage.setItem('canvas-editor-' + name + '-data', e.target.value)
+    const onChangeSelector = e => {
+      window.localStorage.setItem('cheerio-editor-' + name + '-selector', e.target.value)
       this.setState(this.load())
     }
-    let cells = [];
-    let cellsStyle = {}
-    try {
-      const data = this.getData()
-      if (Array.isArray(data)) {
-        cells = data
-        let dim = 1;
-        while(dim*dim < data.length) dim++
-        cellsStyle.gridTemplateRows = `repeat(${dim}, 1fr)`
-        cellsStyle.gridTemplateColumns = `repeat(${dim}, 1fr)`
-      }
-    } catch (e){}
 
+    const toStr= x => {
+      try{
+        return `${x}`
+      } catch (e) {
+        return 'No'
+      }
+    }
+
+    const $ = cheerio.load(text)
+    let res = []
+    try {
+
+      const [nextPageSelector, nextPageVal] = selector.split('->');
+
+      if (nextPageSelector && nextPageVal) {
+        res[0] = $(nextPageSelector)
+          .map((_, el) => el.name)
+          .get();
+
+        res[1] = $(nextPageSelector)
+          .map((_, el) => el.attribs[nextPageVal])
+          .get()[0];
+      }
+
+    }catch(e) {
+      res = toStr(e)
+    }
     return (
       <div className="App">
         <div className="Editor" >
@@ -125,17 +127,15 @@ class App extends Component {
           <h1>{name}</h1>
           <div className="editors">
             <textarea value={text} onChange={onChange} />
-            <textarea value={data} onChange={onChangeData} />
+            <textarea value={selector} onChange={onChangeSelector} />
           </div>
         </div>
 
         <div className="Preview">
+          <pre>
+            {JSON.stringify(res, null, '  ')}
+          </pre>
 
-          {cells.length > 0 ? (
-            <div className="cells" style={cellsStyle}>
-              {cells.map((_, i) => <canvas key={i} className="cell" id={`cell_${i}`} />)}
-            </div>
-          ) : <canvas id="preview" /> }
         </div>
 
       </div>

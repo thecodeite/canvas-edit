@@ -35,6 +35,7 @@ hr {
 .Preview {
   background: white;
   height: calc(100% - 200px - 12px);
+  overflow: scroll;
 }
 
 button {
